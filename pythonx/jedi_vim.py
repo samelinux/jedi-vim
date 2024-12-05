@@ -884,33 +884,42 @@ def show_call_signatures(signatures=()):
         # (Marko Mahni, 2010 Jul 18))
         text = " (%s) " % ', '.join(params)
         text = ' ' * (insert_column - len(line)) + text
-        end_column = insert_column + len(text) - 2  # -2 due to bold symbols
+        text=text.replace("  ","")
+        if len(text)>512:
+          text=text[:509]+'...'
+        # Luca Giacometti: call popup_atcursor instaed of inserting the text
+        if True:
+         vim_command(
+             "call popup_atcursor('%s',{'moved':'any','border':[1,1,1,1]})"
+             % text)
+        else:
+         end_column = insert_column + len(text) - 2  # -2 due to bold symbols
 
-        # Need to decode it with utf8, because vim returns always a python 2
-        # string even if it is unicode.
-        e = vim_eval('g:jedi#call_signature_escape')
-        if hasattr(e, 'decode'):
-            e = e.decode('UTF-8')
-        # replace line before with cursor
-        regex = "xjedi=%sx%sxjedix".replace('x', e)
+         # Need to decode it with utf8, because vim returns always a python 2
+         # string even if it is unicode.
+         e = vim_eval('g:jedi#call_signature_escape')
+         if hasattr(e, 'decode'):
+             e = e.decode('UTF-8')
+         # replace line before with cursor
+         regex = "xjedi=%sx%sxjedix".replace('x', e)
 
-        prefix, replace = line[:insert_column], line[insert_column:end_column]
+         prefix, replace = line[:insert_column], line[insert_column:end_column]
 
-        # Check the replace stuff for strings, to append them
-        # (don't want to break the syntax)
-        regex_quotes = r'''\\*["']+'''
-        # `add` are all the quotation marks.
-        # join them with a space to avoid producing '''
-        add = ' '.join(re.findall(regex_quotes, replace))
-        # search backwards
-        if add and replace[0] in ['"', "'"]:
-            a = re.search(regex_quotes + '$', prefix)
-            add = ('' if a is None else a.group(0)) + add
+         # Check the replace stuff for strings, to append them
+         # (don't want to break the syntax)
+         regex_quotes = r'''\\*["']+'''
+         # `add` are all the quotation marks.
+         # join them with a space to avoid producing '''
+         add = ' '.join(re.findall(regex_quotes, replace))
+         # search backwards
+         if add and replace[0] in ['"', "'"]:
+             a = re.search(regex_quotes + '$', prefix)
+             add = ('' if a is None else a.group(0)) + add
 
-        tup = '%s, %s' % (len(add), replace)
-        repl = prefix + (regex % (tup, text)) + add + line[end_column:]
+         tup = '%s, %s' % (len(add), replace)
+         repl = prefix + (regex % (tup, text)) + add + line[end_column:]
 
-        vim_eval('setline(%s, %s)' % (line_to_replace, repr(PythonToVimStr(repl))))
+         vim_eval('setline(%s, %s)' % (line_to_replace, repr(PythonToVimStr(repl))))
 
 
 @catch_and_print_exceptions
