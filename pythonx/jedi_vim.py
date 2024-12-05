@@ -884,11 +884,11 @@ def show_call_signatures(signatures=()):
         # (Marko Mahni, 2010 Jul 18))
         text = " (%s) " % ', '.join(params)
         text = ' ' * (insert_column - len(line)) + text
-        text=text.replace("  ","")
-        if len(text)>512:
-          text=text[:509]+'...'
         # Luca Giacometti: call popup_atcursor instaed of inserting the text
         if True:
+         text=text.replace("  ","")
+         if len(text)>512:
+           text=text[:509]+'...'
          vim_command(
              "call popup_atcursor('%s',{'moved':'any','border':[1,1,1,1]})"
              % text)
